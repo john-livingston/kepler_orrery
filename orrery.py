@@ -9,11 +9,12 @@ from matplotlib.ticker import FixedLocator as FL
 
 # what KOI file to use
 cd = os.path.abspath(os.path.dirname(__file__))
-koilist = os.path.join(cd, 'KOI_List.txt')
+# koilist = os.path.join(cd, 'KOI_List.txt')
+k2list = os.path.join(cd, 'k2c10-valid.txt')
 
 # are we loading in system locations from a previous file (None if not)
-lcenfile = os.path.join(cd, 'orrery_centers.txt')
-# lcenfile = None
+# lcenfile = os.path.join(cd, 'orrery_centers_2.txt')
+lcenfile = None
 # if we're not loading a centers file,
 # where do we want to save the one generated (None if don't save)
 # scenfile = os.path.join(cd, 'orrery_centers_2.txt')
@@ -21,16 +22,18 @@ scenfile = None
 
 # add in the solar system to the plots
 addsolar = True
+# addsolar = False
 # put it at a fixed location? otherwise use posinlist to place it
+# fixedpos = True
 fixedpos = False
 # fixed x and y positions (in AU) to place the Solar System
 # if addsolar and fixedpos are True
-ssx = 6.
-ssy = 1.
+ssx = 7.2
+ssy = 2.8
 # fraction of the way through the planet list to treat the solar system
 # if fixedpos is False.
 # 0 puts it first and near the center, 1 puts it last on the outside
-posinlist = 0.25
+posinlist = 1
 
 # making rstart smaller or maxtry bigger takes longer but tightens the
 # circle
@@ -44,16 +47,20 @@ maxtry = 50
 spacing = 0.3
 
 # which font to use for the text
-fontfile = os.path.join(cd, 'Avenir-Black.otf')
+# fontfile = os.path.join(cd, 'Avenir-Black.otf')
+fontfile = os.path.join(cd, 'RegencieLight.ttf')
 fontfam = 'normal'
-fontcol = 'white'
+# fontcol = 'white'
+fontcol = 'silver'
 
 # font sizes at various resolutions
 fszs1 = {480: 12, 720: 14, 1080: 22}
 fszs2 = {480: 15, 720: 17, 1080: 27}
 
 # background color
-bkcol = 'black'
+# bkcol = 'black'
+# bkcol = 'midnightblue'
+bkcol = '#1F1C18'
 
 # color and alpha for the circular orbit paths
 orbitcol = '#424242'
@@ -77,12 +84,14 @@ outdir = os.path.join(cd, 'movie/')
 
 # number of frames to produce
 # using ffmpeg with the palette at (sec * frames/sec)
-# nframes = 40 * 20
-nframes = 60 * 30
+nframes = 40 * 20
+# nframes = 60 * 30
 
 # times to evaluate the planets at
 # Kepler observed from 120.5 to 1591
-times = np.arange(1591 - nframes / 2., 1591, 0.5)
+# K2 C10: July 06, 2016 to September 20, 2016 (roughly BKJD 2750 - 2818)
+# times = np.arange(1591 - nframes / 2., 1591, 0.5)
+times = np.linspace(2750, 2818, nframes)
 
 # setup for the custom zoom levels
 inds = np.arange(len(times))
@@ -91,10 +100,13 @@ zooms = np.zeros_like(times) - 1.
 
 # what zoom level each frame is at (1. means default with everything)
 
-"""
 # zoom out once
-zooms[inds < 0.25 * nmax] = 0.35
-zooms[inds > 0.7 * nmax] = 1.
+# zooms[inds < 0.25 * nmax] = 0.5
+# zooms[inds > 0.75 * nmax] = 1.
+# zooms[zooms < 0.] = np.interp(inds[zooms < 0.], inds[zooms > 0.],
+#                               zooms[zooms > 0.])
+zooms[inds < 0.001 * nmax] = 0.5
+zooms[inds > 0.999 * nmax] = 1.
 zooms[zooms < 0.] = np.interp(inds[zooms < 0.], inds[zooms > 0.],
                               zooms[zooms > 0.])
 """
@@ -104,6 +116,7 @@ zooms[(inds > 0.5 * nmax) & (inds < 0.6 * nmax)] = 1.
 zooms[inds > 0.85 * nmax] = 0.35
 zooms[zooms < 0.] = np.interp(inds[zooms < 0.], inds[zooms > 0.],
                               zooms[zooms > 0.])
+"""
 
 # ===================================== #
 
@@ -114,8 +127,10 @@ time0 = dt.datetime(2009, 1, 1, 12)
 kicsolar = -5
 
 # load in the data from the KOI list
-kics, pds, it0s, radius, iteqs, semi = np.genfromtxt(
-    koilist, unpack=True, usecols=(1, 5, 8, 20, 26, 23), delimiter=',')
+# kics, pds, it0s, radius, iteqs, semi = np.genfromtxt(
+#     koilist, unpack=True, usecols=(1, 5, 8, 20, 26, 23), delimiter=',')
+# ID, period, T0, radius_Rearth, teq, sma
+kics, pds, it0s, radius, iteqs, semi = np.loadtxt(k2list, unpack=True)
 
 # grab the KICs with known parameters
 good = (np.isfinite(semi) & np.isfinite(pds) &
@@ -128,6 +143,9 @@ semi = semi[good]
 radius = radius[good]
 iteqs = iteqs[good]
 
+sma_scale_fac = 4
+semi *= sma_scale_fac
+
 # if we've already decided where to put each system, load it up
 if lcenfile is not None:
     multikics, xcens, ycens, maxsemis = np.loadtxt(lcenfile, unpack=True)
@@ -137,6 +155,7 @@ else:
     # we only want to plot multi-planet systems
     multikics, nct = np.unique(kics, return_counts=True)
     multikics = multikics[nct > 1]
+    multikics = kics
     maxsemis = multikics * 0.
     nplan = len(multikics)
 
@@ -183,7 +202,7 @@ else:
 
         # progress bar
         if (ii % 20) == 0:
-            print 'Placing {0} of {1} planets'.format(ii, nplan)
+            print ('Placing {0} of {1} planets'.format(ii, nplan))
 
         # put the solar system at its fixed position if desired
         if multikics[ii] == kicsolar and fixedpos:
@@ -266,37 +285,69 @@ fullycens = np.array([])
 for ii in np.arange(nplan):
     # known solar system parameters
     if addsolar and multikics[ii] == kicsolar:
-        usedkics = np.concatenate((usedkics, np.ones(8) * kicsolar))
+        # usedkics = np.concatenate((usedkics, np.ones(8) * kicsolar))
+        # # always start the outer solar system in the same places
+        # # for optimial visibility
+        # t0s = np.concatenate((t0s, [85., 192., 266., 180.,
+        #                             times[0] - 3. * 4332.8 / 4,
+        #                             times[0] - 22. / 360 * 10755.7,
+        #                             times[0] - 30687 * 145. / 360,
+        #                             times[0] - 60190 * 202. / 360]))
+        # periods = np.concatenate((periods, [87.97, 224.70, 365.26, 686.98,
+        #                                     4332.8, 10755.7, 30687, 60190]))
+        # semis = np.concatenate((semis, [0.387, 0.723, 1.0, 1.524, 5.203,
+        #                                 9.537, 19.19, 30.07]))
+        # radii = np.concatenate((radii, [0.383, 0.95, 1.0, 0.53, 10.86, 9.00,
+        #                                 3.97, 3.86]))
+        # teqs = np.concatenate((teqs, [409, 299, 255, 206, 200,
+        #                               200, 200, 200]))
+        # fullxcens = np.concatenate((fullxcens, np.zeros(8) + xcens[ii]))
+        # fullycens = np.concatenate((fullycens, np.zeros(8) + ycens[ii]))
+        # continue
+
+        # usedkics = np.concatenate((usedkics, np.ones(2) * kicsolar))
+        # # always start the outer solar system in the same places
+        # # for optimial visibility
+        # t0s = np.concatenate((t0s, [85., 192.]))
+        # periods = np.concatenate((periods, [87.97, 224.70]))
+        # sssemis = np.array([0.387, 0.723]) * sma_scale_fac
+        # semis = np.concatenate((semis, sssemis))
+        # radii = np.concatenate((radii, [0.383, 0.95]))
+        # teqs = np.concatenate((teqs, [409, 299]))
+        # fullxcens = np.concatenate((fullxcens, np.zeros(2) + xcens[ii]))
+        # fullycens = np.concatenate((fullycens, np.zeros(2) + ycens[ii]))
+
+        usedkics = np.append(usedkics, np.ones(1) * kicsolar)
         # always start the outer solar system in the same places
         # for optimial visibility
-        t0s = np.concatenate((t0s, [85., 192., 266., 180.,
-                                    times[0] - 3. * 4332.8 / 4,
-                                    times[0] - 22. / 360 * 10755.7,
-                                    times[0] - 30687 * 145. / 360,
-                                    times[0] - 60190 * 202. / 360]))
-        periods = np.concatenate((periods, [87.97, 224.70, 365.26, 686.98,
-                                            4332.8, 10755.7, 30687, 60190]))
-        semis = np.concatenate((semis, [0.387, 0.723, 1.0, 1.524, 5.203,
-                                        9.537, 19.19, 30.07]))
-        radii = np.concatenate((radii, [0.383, 0.95, 1.0, 0.53, 10.86, 9.00,
-                                        3.97, 3.86]))
-        teqs = np.concatenate((teqs, [409, 299, 255, 206, 200,
-                                      200, 200, 200]))
-        fullxcens = np.concatenate((fullxcens, np.zeros(8) + xcens[ii]))
-        fullycens = np.concatenate((fullycens, np.zeros(8) + ycens[ii]))
+        t0s = np.append(t0s, [85.])
+        periods = np.append(periods, [87.97])
+        sssemis = np.array([0.387]) * sma_scale_fac
+        semis = np.append(semis, sssemis)
+        radii = np.append(radii, [0.383])
+        teqs = np.append(teqs, [409])
+        fullxcens = np.append(fullxcens, np.zeros(1) + xcens[ii])
+        fullycens = np.append(fullycens, np.zeros(1) + ycens[ii])
+
+        continue
+
+    if multikics[ii] in usedkics:
         continue
 
     fd = np.where(kics == multikics[ii])[0]
+    # fd = kics == multikics[ii]
     # get the values for this system
-    usedkics = np.concatenate((usedkics, kics[fd]))
-    t0s = np.concatenate((t0s, it0s[fd]))
-    periods = np.concatenate((periods, pds[fd]))
-    semis = np.concatenate((semis, semi[fd]))
-    radii = np.concatenate((radii, radius[fd]))
-    teqs = np.concatenate((teqs, iteqs[fd]))
-    fullxcens = np.concatenate((fullxcens, np.zeros(len(fd)) + xcens[ii]))
-    fullycens = np.concatenate((fullycens, np.zeros(len(fd)) + ycens[ii]))
+    usedkics = np.append(usedkics, kics[fd])
+    t0s = np.append(t0s, it0s[fd])
+    periods = np.append(periods, pds[fd])
+    semis = np.append(semis, semi[fd])
+    # semis *= 2
+    radii = np.append(radii, radius[fd])
+    teqs = np.append(teqs, iteqs[fd])
+    fullxcens = np.append(fullxcens, np.zeros(len(fd)) + xcens[ii])
+    fullycens = np.append(fullycens, np.zeros(len(fd)) + ycens[ii])
 
+# import pdb; pdb.set_trace()
 # sort by radius so that the large planets are on the bottom and
 # don't cover smaller planets
 rs = np.argsort(radii)[::-1]
@@ -326,7 +377,6 @@ plt.gca().patch.set_facecolor(bkcol)
 
 # don't count the orbits of the outer solar system in finding figure limits
 ns = np.where(usedkics != kicsolar)[0]
-
 # this section manually makes the aspect ratio equal
 #  but completely fills the figure
 
@@ -353,7 +403,7 @@ else:
              (xmax + xmin) / 2. + (ymax - ymin) * sr / 2.)
 
 lws = {480: 1, 720: 1, 1080: 2}
-sslws = {480: 2, 720: 2, 1080: 4}
+sslws = {480: 2, 720: 2, 1080: 2}
 # plot the orbital circles for every planet
 for ii in np.arange(len(t0s)):
     # solid, thinner lines for normal planets
@@ -372,8 +422,9 @@ for ii in np.arange(len(t0s)):
     fig.gca().add_artist(c)
 
 # set up the planet size scale
-sscales = {480: 12., 720: 30., 1080: 50.}
-sscale = sscales[reso]
+# sscales = {480: 12., 720: 30., 1080: 50.}
+# sscale = sscales[reso]
+sscale = 50
 
 rearth = 1.
 rnep = 3.856
@@ -385,10 +436,12 @@ pnames = ['Mercury', 'Earth', 'Neptune', 'Jupiter']
 csolar = np.array([409, 255, 46, 112])
 
 # keep the smallest planets visible and the largest from being too huge
-solarsys = np.clip(solarsys, 0.8, 1.3 * rjup)
+# solarsys = np.clip(solarsys, 0.8, 1.3 * rjup)
+solarsys = np.clip(solarsys, 0.25, 1.3 * rjup)
 solarscale = sscale * solarsys
 
-radii = np.clip(radii, 0.8, 1.3 * rjup)
+# radii = np.clip(radii, 0.8, 1.3 * rjup)
+radii = np.clip(radii, 0.25, 1.3 * rjup)
 pscale = sscale * radii
 
 # color bar temperature tick values and labels
@@ -416,7 +469,7 @@ prop = fm.FontProperties(fname=fontfile)
 # create the 'Solar System' text identification
 if addsolar:
     loc = np.where(usedkics == kicsolar)[0][0]
-    plt.text(fullxcens[loc], fullycens[loc], 'Solar\nSystem', zorder=-2,
+    plt.text(fullxcens[loc], fullycens[loc], 'Mercury', zorder=-2,
              color=fontcol, family=fontfam, fontproperties=prop, fontsize=fsz1,
              horizontalalignment='center', verticalalignment='center')
 
@@ -503,10 +556,10 @@ txtyoff2 = txtyoffs2[reso]
 
 # put in the credits in the top right
 text = plt.text(1. - txtxoff, 1. - txtyoff1,
-                time0.strftime('Kepler Orrery IV\n%d %b %Y'), color=fontcol,
+                time0.strftime('K2 Orrery\n%d %b %Y'), color=fontcol,
                 family=fontfam, fontproperties=prop,
                 fontsize=fsz2, zorder=5, transform=ax.transAxes)
-plt.text(1. - txtxoff, 1. - txtyoff2, 'By Ethan Kruse\n@ethan_kruse',
+plt.text(1. - txtxoff, 1. - txtyoff2, 'By John Livingston',
          color=fontcol, family=fontfam,
          fontproperties=prop, fontsize=fsz1,
          zorder=5, transform=ax.transAxes)
@@ -531,6 +584,8 @@ if makemovie:
 
     # go through all the times and make the planets move
     for ii, time in enumerate(times):
+        # time = times[0]
+
         # remove old planet locations and dates
         tmp.remove()
         text.remove()
@@ -542,7 +597,7 @@ if makemovie:
         newt = time0 + dt.timedelta(time)
         # put in the credits in the top right
         text = plt.text(1. - txtxoff, 1. - txtyoff1,
-                        newt.strftime('Kepler Orrery IV\n%d %b %Y'),
+                        newt.strftime('K2 Orrery\n%d %b %Y'),
                         color=fontcol, family=fontfam,
                         fontproperties=prop,
                         fontsize=fsz2, zorder=5, transform=ax.transAxes)
@@ -555,6 +610,6 @@ if makemovie:
                           zorder=3, cmap=mycmap, clip_on=False)
 
         plt.savefig(os.path.join(outdir, 'fig{0:04d}.png'.format(ii)),
-                    facecolor=fig.get_facecolor(), edgecolor='none')
+                    facecolor=fig.get_facecolor(), edgecolor='none', dpi=200)
         if not (ii % 10):
-            print '{0} of {1} frames'.format(ii, len(times))
+            print ('{0} of {1} frames'.format(ii, len(times)))
