@@ -10,7 +10,8 @@ from matplotlib.ticker import FixedLocator as FL
 # what KOI file to use
 cd = os.path.abspath(os.path.dirname(__file__))
 # koilist = os.path.join(cd, 'KOI_List.txt')
-k2list = os.path.join(cd, 'k2c10-valid.txt')
+# k2list = os.path.join(cd, 'k2c10-valid.txt')
+k2list = os.path.join(cd, 'k2c5-8-valid.txt')
 
 # are we loading in system locations from a previous file (None if not)
 # lcenfile = os.path.join(cd, 'orrery_centers_2.txt')
@@ -84,14 +85,16 @@ outdir = os.path.join(cd, 'movie/')
 
 # number of frames to produce
 # using ffmpeg with the palette at (sec * frames/sec)
-nframes = 40 * 20
-# nframes = 60 * 30
+# nframes = 40 * 20
+nframes = 60 * 30
 
 # times to evaluate the planets at
 # Kepler observed from 120.5 to 1591
-# K2 C10: July 06, 2016 to September 20, 2016 (roughly BKJD 2750 - 2818)
 # times = np.arange(1591 - nframes / 2., 1591, 0.5)
-times = np.linspace(2750, 2818, nframes)
+# K2 C10: July 06, 2016 to September 20, 2016 (roughly BKJD 2750 - 2818)
+# times = np.linspace(2750, 2818, nframes)
+# K2 C5-8: 2015 Apr 27 to 2016 Mar 23 (roughly BKJD 2306 - 2637)
+times = np.linspace(2306, 2637, nframes)
 
 # setup for the custom zoom levels
 inds = np.arange(len(times))
@@ -105,7 +108,7 @@ zooms = np.zeros_like(times) - 1.
 # zooms[inds > 0.75 * nmax] = 1.
 # zooms[zooms < 0.] = np.interp(inds[zooms < 0.], inds[zooms > 0.],
 #                               zooms[zooms > 0.])
-zooms[inds < 0.001 * nmax] = 0.5
+zooms[inds < 0.001 * nmax] = 0.35
 zooms[inds > 0.999 * nmax] = 1.
 zooms[zooms < 0.] = np.interp(inds[zooms < 0.], inds[zooms > 0.],
                               zooms[zooms > 0.])
