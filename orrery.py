@@ -11,7 +11,8 @@ from matplotlib.ticker import FixedLocator as FL
 cd = os.path.abspath(os.path.dirname(__file__))
 # koilist = os.path.join(cd, 'KOI_List.txt')
 # k2list = os.path.join(cd, 'k2c10-valid.txt')
-k2list = os.path.join(cd, 'k2c5-8-valid.txt')
+# k2list = os.path.join(cd, 'k2c5-8-valid.txt')
+k2list = os.path.join(cd, 'k2c5-10-valid.txt')
 
 # are we loading in system locations from a previous file (None if not)
 # lcenfile = os.path.join(cd, 'orrery_centers_2.txt')
@@ -53,6 +54,7 @@ fontfile = os.path.join(cd, 'RegencieLight.ttf')
 fontfam = 'normal'
 # fontcol = 'white'
 fontcol = 'silver'
+# fontcol = 'k'
 
 # font sizes at various resolutions
 fszs1 = {480: 12, 720: 14, 1080: 22}
@@ -69,9 +71,11 @@ orbitalpha = 1.
 
 # add a background to the legend to distinguish it?
 legback = True
+# legback = False
 # if so, use this color and alpha
-legbackcol = bkcol
-legalpha = 0.7
+legbackcol = 'gray'
+# legalpha = 0.7
+legalpha = 1
 
 # are we making the png files for a movie or gif
 makemovie = True
