@@ -51,7 +51,7 @@ spacing = 0.3
 # which font to use for the text
 # fontfile = os.path.join(cd, 'Avenir-Black.otf')
 fontfile = os.path.join(cd, 'RegencieLight.ttf')
-fontfam = 'normal'
+fontfam = 'sans-serif'
 # fontcol = 'white'
 fontcol = 'silver'
 # fontcol = 'k'
@@ -69,6 +69,7 @@ bkcol = '#1F1C18'
 orbitcol = '#424242'
 orbitalpha = 1.
 
+include_legend = True
 # add a background to the legend to distinguish it?
 # legback = True
 legback = False
@@ -379,13 +380,14 @@ else:
 
 # create the figure at the right size (this assumes a default pix/inch of 100)
 figsizes = {480: (8.54, 4.8), 720: (8.54, 4.8), 1080: (19.2, 10.8)}
-fig = plt.figure(figsize=figsizes[reso], frameon=False)
+# fig = plt.figure(figsize=figsizes[reso], frameon=False)
+fig = plt.figure(figsize=figsizes[reso], facecolor=bkcol)
 
 # make the plot cover the entire figure with the right background colors
 ax = fig.add_axes([0.0, 0, 1, 1])
 ax.axis('off')
-fig.patch.set_facecolor(bkcol)
-plt.gca().patch.set_facecolor(bkcol)
+# fig.patch.set_facecolor(bkcol)
+# plt.gca().patch.set_facecolor(bkcol)
 
 # don't count the orbits of the outer solar system in finding figure limits
 ns = np.where(usedkics != kicsolar)[0]
@@ -457,8 +459,11 @@ radii = np.clip(radii, 0.25, 1.3 * rjup)
 pscale = sscale * radii
 
 # color bar temperature tick values and labels
-ticks = np.array([250, 500, 750, 1000, 1250])
-labs = ['250', '500', '750', '1000', '1250', '1500']
+# ticks = np.array([250, 500, 750, 1000, 1250])
+ticks = np.array([250, 550, 850, 1200])
+# labs = ['250', '500', '750', '1000', '1250', '1500']
+# labs = ['250', '500', '750', '1000', '1250']
+labs = ['250', '550', '850', '1200']
 
 # blue and red colors for the color bar
 RGB1 = np.array([1, 185, 252])
@@ -485,74 +490,75 @@ if addsolar:
              color=fontcol, family=fontfam, fontproperties=prop, fontsize=fsz1,
              horizontalalignment='center', verticalalignment='center')
 
-# # if we're putting in a translucent background behind the text
-# # to make it easier to read
-# if legback:
-#     box1starts = {480: (0., 0.445), 720: (0., 0.46), 1080: (0., 0.47)}
-#     box1widths = {480: 0.19, 720: 0.147, 1080: 0.153}
-#     box1heights = {480: 0.555, 720: 0.54, 1080: 0.53}
-#
-#     box2starts = {480: (0.79, 0.8), 720: (0.83, 0.84), 1080: (0.83, 0.84)}
-#     box2widths = {480: 0.21, 720: 0.17, 1080: 0.17}
-#     box2heights = {480: 0.2, 720: 0.16, 1080: 0.16}
-#
-#     # create the rectangles at the right heights and widths
-#     # based on the resolution
-#     c = plt.Rectangle(box1starts[reso], box1widths[reso], box1heights[reso],
-#                       alpha=legalpha, fc=legbackcol, ec='none', zorder=4,
-#                       transform=ax.transAxes)
-#     d = plt.Rectangle(box2starts[reso], box2widths[reso], box2heights[reso],
-#                       alpha=legalpha, fc=legbackcol, ec='none', zorder=4,
-#                       transform=ax.transAxes)
-#     ax.add_artist(c)
-#     ax.add_artist(d)
-#
-# # appropriate spacing from the left edge for the color bar
-# cbxoffs = {480: 0.09, 720: 0.07, 1080: 0.074}
-# cbxoff = cbxoffs[reso]
-#
-# # plot the solar system planet scale
-# ax.scatter(np.zeros(len(solarscale)) + cbxoff,
-#            1. - 0.13 + 0.03 * np.arange(len(solarscale)), s=solarscale,
-#            c=csolar, zorder=5, marker='o',
-#            edgecolors='none', lw=0, cmap=mycmap, vmin=ticks.min(),
-#            vmax=ticks.max(), clip_on=False, transform=ax.transAxes)
-#
-# # put in the text labels for the solar system planet scale
-# for ii in np.arange(len(solarscale)):
-#     ax.text(cbxoff + 0.01, 1. - 0.14 + 0.03 * ii,
-#             pnames[ii], color=fontcol, family=fontfam,
-#             fontproperties=prop, fontsize=fsz1, zorder=5,
-#             transform=ax.transAxes)
-#
-# # colorbar axis on the left centered with the planet scale
-# ax2 = fig.add_axes([cbxoff - 0.005, 0.54, 0.01, 0.3])
-# ax2.set_zorder(2)
-# cbar = plt.colorbar(tmp, cax=ax2, extend='both', ticks=ticks)
-# # remove the white/black outline around the color bar
-# cbar.outline.set_linewidth(0)
-# # allow two different tick scales
-# cbar.ax.minorticks_on()
-# # turn off tick lines and put the physical temperature scale on the left
-# cbar.ax.tick_params(axis='y', which='major', color=fontcol, width=2,
-#                     left='off', right='off', length=5, labelleft='on',
-#                     labelright='off', zorder=5)
-# # turn off tick lines and put the physical temperature approximations
-# # on the right
-# cbar.ax.tick_params(axis='y', which='minor', color=fontcol, width=2,
-#                     left='off', right='off', length=5, labelleft='off',
-#                     labelright='on', zorder=5)
-# # say where to put the physical temperature approximations and give them labels
-# cbar.ax.yaxis.set_minor_locator(FL(tmp.norm([255, 409, 730, 1200])))
-# cbar.ax.set_yticklabels(labs, color=fontcol, family=fontfam,
-#                         fontproperties=prop, fontsize=fsz1, zorder=5)
-# cbar.ax.set_yticklabels(['Earth', 'Mercury', 'Surface\nof Venus', 'Lava'],
-#                         minor=True, color=fontcol, family=fontfam,
-#                         fontproperties=prop, fontsize=fsz1)
-# clab = 'Planet Equilibrium\nTemperature (K)'
-# # add the overall label at the bottom of the color bar
-# cbar.ax.set_xlabel(clab, color=fontcol, family=fontfam, fontproperties=prop,
-#                    size=fsz1, zorder=5)
+if include_legend:
+    # if we're putting in a translucent background behind the text
+    # to make it easier to read
+    if legback:
+        box1starts = {480: (0., 0.445), 720: (0., 0.46), 1080: (0., 0.47)}
+        box1widths = {480: 0.19, 720: 0.147, 1080: 0.153}
+        box1heights = {480: 0.555, 720: 0.54, 1080: 0.53}
+
+        box2starts = {480: (0.79, 0.8), 720: (0.83, 0.84), 1080: (0.83, 0.84)}
+        box2widths = {480: 0.21, 720: 0.17, 1080: 0.17}
+        box2heights = {480: 0.2, 720: 0.16, 1080: 0.16}
+
+        # create the rectangles at the right heights and widths
+        # based on the resolution
+        c = plt.Rectangle(box1starts[reso], box1widths[reso], box1heights[reso],
+                          alpha=legalpha, fc=legbackcol, ec='none', zorder=4,
+                          transform=ax.transAxes)
+        d = plt.Rectangle(box2starts[reso], box2widths[reso], box2heights[reso],
+                          alpha=legalpha, fc=legbackcol, ec='none', zorder=4,
+                          transform=ax.transAxes)
+        ax.add_artist(c)
+        ax.add_artist(d)
+
+    # appropriate spacing from the left edge for the color bar
+    cbxoffs = {480: 0.09, 720: 0.07, 1080: 0.074}
+    cbxoff = cbxoffs[reso]
+
+    # plot the solar system planet scale
+    ax.scatter(np.zeros(len(solarscale)) + cbxoff,
+               1. - 0.13 + 0.03 * np.arange(len(solarscale)), s=solarscale,
+               c=csolar, zorder=5, marker='o',
+               edgecolors='none', lw=0, cmap=mycmap, vmin=ticks.min(),
+               vmax=ticks.max(), clip_on=False, transform=ax.transAxes)
+
+    # put in the text labels for the solar system planet scale
+    for ii in np.arange(len(solarscale)):
+        ax.text(cbxoff + 0.01, 1. - 0.14 + 0.03 * ii,
+                pnames[ii], color=fontcol, family=fontfam,
+                fontproperties=prop, fontsize=fsz1, zorder=5,
+                transform=ax.transAxes)
+
+    # colorbar axis on the left centered with the planet scale
+    ax2 = fig.add_axes([cbxoff - 0.005, 0.54, 0.01, 0.3])
+    ax2.set_zorder(2)
+    cbar = plt.colorbar(tmp, cax=ax2, extend='both', ticks=ticks)
+    # remove the white/black outline around the color bar
+    cbar.outline.set_linewidth(0)
+    # allow two different tick scales
+    cbar.ax.minorticks_on()
+    # turn off tick lines and put the physical temperature scale on the left
+    cbar.ax.tick_params(axis='y', which='major', color=fontcol, width=2,
+                        left='off', right='off', length=5, labelleft='on',
+                        labelright='off', zorder=5)
+    # turn off tick lines and put the physical temperature approximations
+    # on the right
+    cbar.ax.tick_params(axis='y', which='minor', color=fontcol, width=2,
+                        left='off', right='off', length=5, labelleft='off',
+                        labelright='on', zorder=5)
+    # say where to put the physical temperature approximations and give them labels
+    cbar.ax.yaxis.set_minor_locator(FL(tmp.norm([255, 409, 730, 1200])))
+    cbar.ax.set_yticklabels(labs, color=fontcol, family=fontfam, minor=True,
+                            fontproperties=prop, fontsize=fsz1, zorder=5)
+    cbar.ax.set_yticklabels(['Earth', 'Mercury', 'Surface\nof Venus', 'Lava'],
+                            color=fontcol, family=fontfam,
+                            fontproperties=prop, fontsize=fsz1)
+    clab = 'Planet Equilibrium\nTemperature (K)'
+    # add the overall label at the bottom of the color bar
+    cbar.ax.set_xlabel(clab, color=fontcol, family=fontfam, fontproperties=prop,
+                       size=fsz1, zorder=5)
 
 # switch back to the main plot
 plt.sca(ax)
@@ -630,7 +636,7 @@ if makemovie:
                           vmin=ticks.min(), vmax=ticks.max(),
                           zorder=3, cmap=mycmap, clip_on=False)
 
-        plt.savefig(os.path.join(outdir, 'fig{0:04d}.png'.format(ii)),
-                    facecolor=fig.get_facecolor(), edgecolor='none', dpi=200)
+        plt.savefig(os.path.join(outdir, 'fig{0:04d}.png'.format(ii)), transparent=False,
+                    facecolor=bkcol, edgecolor='none', dpi=200)
         if not (ii % 10):
             print ('{0} of {1} frames'.format(ii, len(times)))
